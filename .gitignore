@@ -1,0 +1,13 @@
+.idea
+
+.DS_Store
+.Trashes
+.metadata_never_index
+.fseventsd/
+boot_out.txt
+.TemporaryItems/
+._*
+
+*.mp3
+devices/*/device-fs/lib/
+settings.toml
