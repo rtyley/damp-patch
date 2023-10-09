@@ -1,5 +1,8 @@
 [Unit]
 Description=My cool script for taking pictures
+# Note this requires enabling: sudo systemctl enable --now systemd-time-wait-sync.service
+After=time-sync.target
+Requires=time-sync.target
 
 [Service]
 Type=oneshot

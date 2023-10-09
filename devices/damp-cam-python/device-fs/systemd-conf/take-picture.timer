@@ -6,7 +6,7 @@ Description=Timer for taking pictures periodically
 OnBootSec=0 min
 
 # ... and then periodically after boot...:
-OnActiveSec=10 min
+OnUnitActiveSec=10 min
 
 [Install]
 WantedBy=multi-user.target
