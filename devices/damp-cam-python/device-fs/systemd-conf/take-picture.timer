@@ -1,0 +1,12 @@
+[Unit]
+Description=Timer for taking pictures periodically
+
+[Timer]
+# start this 0 minutes after boot:
+OnBootSec=0 min
+
+# ... and then periodically after boot...:
+OnActiveSec=10 min
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+[Unit]
+Description=My cool script for taking pictures
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/roberto/damp-cam/
+ExecStart=/usr/bin/python3 take-picture.py
+User=roberto
