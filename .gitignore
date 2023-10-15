@@ -10,5 +10,6 @@ boot_out.txt
 
 *.mp3
 devices/*/device-fs/lib/
+credentials.py
 settings.toml
 __pycache__/
