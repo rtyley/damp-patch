@@ -12,6 +12,8 @@ teleport_feed_id = os.environ['TELEPORT_FEED_ID']
 teleport_api_key = os.environ['TELEPORT_API_KEY']
 teleport_folder = '/tmp/teleport-export'
 
+suffix_for_original_image = '-original.jpg'
+
 print(f'teleport_feed_id={teleport_feed_id}')
 
 
@@ -24,7 +26,7 @@ async def download_frame_list(session) -> list[datetime]:
 
 
 def original_image_file_for(dt: datetime) -> str:
-    return f'{teleport_folder}/{iso_format(dt)}.jpg'
+    return f'{teleport_folder}/{iso_format(dt)}{suffix_for_original_image}'
 
 
 def iso_format(dt):
@@ -41,7 +43,7 @@ async def download_frame(session, dt: datetime):
 
 
 def list_currently_downloaded_frames() -> list[datetime]:
-    return [datetime.fromisoformat(file_name.name.strip(".jpg")) for file_name in Path(teleport_folder).glob('*.jpg')]
+    return [datetime.fromisoformat(file_name.name.strip(suffix_for_original_image)) for file_name in Path(teleport_folder).glob(f'*{suffix_for_original_image}')]
 
 
 async def do_tha_bizness():
@@ -55,6 +57,8 @@ async def do_tha_bizness():
         print(f'missing_frames = {missing_frames}')
         tasks = [download_frame(session, dt) for dt in missing_frames]
         await asyncio.gather(*tasks)
+        first_frame = full_frame_list[0]
+        print(first_frame)
 
 
 asyncio.get_event_loop().run_until_complete(do_tha_bizness())
