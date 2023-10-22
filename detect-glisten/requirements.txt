@@ -3,3 +3,6 @@ torchvision
 torchaudio
 opencv-python
 matplotlib
+async
+aiohttp
+aiofiles
