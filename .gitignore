@@ -13,3 +13,5 @@ devices/*/device-fs/lib/
 credentials.py
 settings.toml
 __pycache__/
+env/
+
