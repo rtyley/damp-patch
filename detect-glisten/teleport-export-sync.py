@@ -2,9 +2,18 @@ import asyncio
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+import numpy as np
 
 import aiofiles
 import aiohttp
+import cv2
+
+from segment_anything_hq import SamPredictor, sam_model_registry
+model_type = "vit_b" #"vit_l/vit_b/vit_h/vit_tiny"
+sam_checkpoint = "/Users/Roberto_Tyley/Downloads/sam_hq_vit_b.pth"
+sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+
+
 
 print(os.environ['HOME'])
 
@@ -49,16 +58,33 @@ def list_currently_downloaded_frames() -> list[datetime]:
 async def do_tha_bizness():
     os.makedirs(teleport_folder, exist_ok=True)
     currently_downloaded_frames = list_currently_downloaded_frames()
-    print(f'currently_downloaded_frames={currently_downloaded_frames}')
+    print(f'Num currently_downloaded_frames={len(currently_downloaded_frames)}')
     async with aiohttp.ClientSession() as session:
         full_frame_list = await download_frame_list(session)
-        print(f'full_frame_list = {full_frame_list}')
+        print(f'Num full_frame_list = {len(full_frame_list)}')
         missing_frames = sorted(set(full_frame_list).difference(set(currently_downloaded_frames)))
         print(f'missing_frames = {missing_frames}')
         tasks = [download_frame(session, dt) for dt in missing_frames]
         await asyncio.gather(*tasks)
         first_frame = full_frame_list[0]
         print(first_frame)
+
+        image = cv2.imread(original_image_file_for(first_frame))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        input_point = np.array(
+            [[2510, 3389], [1032, 1312], [1000, 2500], [2275, 3350], [500, 3500], [460, 1565], [1234, 1820],
+             [907, 1593], [1110, 1877], [1231, 1879]])
+        input_label = np.array([1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
+
+        predictor = SamPredictor(sam)
+        predictor.set_image(image)
+        masks, scores, _ = predictor.predict(point_coords=input_point, point_labels=input_label)
+        print(masks.shape)
+
+        mask = masks[0]
+        mask_image = (mask * 255).astype(np.uint8)
+        cv2.imwrite("mask.png", mask_image)
 
 
 asyncio.get_event_loop().run_until_complete(do_tha_bizness())
