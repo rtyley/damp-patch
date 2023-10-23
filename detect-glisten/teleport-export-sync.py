@@ -3,17 +3,17 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 import numpy as np
+import matplotlib.pyplot as plt
 
 import aiofiles
 import aiohttp
 import cv2
 
 from segment_anything_hq import SamPredictor, sam_model_registry
-model_type = "vit_b" #"vit_l/vit_b/vit_h/vit_tiny"
-sam_checkpoint = "/Users/Roberto_Tyley/Downloads/sam_hq_vit_b.pth"
+
+model_type = "vit_h"  # "vit_l/vit_b/vit_h/vit_tiny"
+sam_checkpoint = "/Users/Roberto_Tyley/Downloads/sam_hq_vit_h.pth"
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-
-
 
 print(os.environ['HOME'])
 
@@ -22,6 +22,7 @@ teleport_api_key = os.environ['TELEPORT_API_KEY']
 teleport_folder = '/tmp/teleport-export'
 
 suffix_for_original_image = '-original.jpg'
+suffix_for_mask_image = '-mask.png'
 
 print(f'teleport_feed_id={teleport_feed_id}')
 
@@ -38,6 +39,10 @@ def original_image_file_for(dt: datetime) -> str:
     return f'{teleport_folder}/{iso_format(dt)}{suffix_for_original_image}'
 
 
+def mask_file_for(dt: datetime) -> str:
+    return f'{teleport_folder}/{iso_format(dt)}{suffix_for_mask_image}'
+
+
 def iso_format(dt):
     return dt.isoformat().replace("+00:00", "Z")
 
@@ -52,7 +57,8 @@ async def download_frame(session, dt: datetime):
 
 
 def list_currently_downloaded_frames() -> list[datetime]:
-    return [datetime.fromisoformat(file_name.name.strip(suffix_for_original_image)) for file_name in Path(teleport_folder).glob(f'*{suffix_for_original_image}')]
+    return [datetime.fromisoformat(file_name.name.strip(suffix_for_original_image)) for file_name in
+            Path(teleport_folder).glob(f'*{suffix_for_original_image}')]
 
 
 async def do_tha_bizness():
@@ -66,25 +72,34 @@ async def do_tha_bizness():
         print(f'missing_frames = {missing_frames}')
         tasks = [download_frame(session, dt) for dt in missing_frames]
         await asyncio.gather(*tasks)
-        first_frame = full_frame_list[0]
-        print(first_frame)
 
-        image = cv2.imread(original_image_file_for(first_frame))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        frame_time = full_frame_list[0]
+        image = original_image_for(frame_time)
+        plt.figure(figsize=(10, 10))
+        plt.imshow(image)
+        plt.axis('on')
+        plt.show()
 
-        input_point = np.array(
-            [[2510, 3389], [1032, 1312], [1000, 2500], [2275, 3350], [500, 3500], [460, 1565], [1234, 1820],
-             [907, 1593], [1110, 1877], [1231, 1879]])
-        input_label = np.array([1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
+        for frame_time in full_frame_list:
+            identify_mask(frame_time)
 
-        predictor = SamPredictor(sam)
-        predictor.set_image(image)
-        masks, scores, _ = predictor.predict(point_coords=input_point, point_labels=input_label)
-        print(masks.shape)
 
-        mask = masks[0]
-        mask_image = (mask * 255).astype(np.uint8)
-        cv2.imwrite("mask.png", mask_image)
+def original_image_for(frame_time):
+    return cv2.cvtColor(cv2.imread(original_image_file_for(frame_time)), cv2.COLOR_BGR2RGB)
+
+
+def identify_mask(frame_time: datetime):
+    image = original_image_for(frame_time)
+    input_point = np.array([[732, 2500], [732, 2000], [1630, 1690]])
+    input_label = np.array([1, 1, 0])
+    predictor = SamPredictor(sam)
+    predictor.set_image(image)
+    masks, scores, _ = predictor.predict(point_coords=input_point, point_labels=input_label)
+    print(masks.shape)
+    mask = masks[0]
+    print(f'{iso_format(frame_time)} : {(mask > 0).sum()}')
+    mask_image = (mask * 255).astype(np.uint8)
+    cv2.imwrite(mask_file_for(frame_time), mask_image)
 
 
 asyncio.get_event_loop().run_until_complete(do_tha_bizness())
