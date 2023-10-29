@@ -91,6 +91,10 @@ async def do_tha_bizness():
 
     bright_pixel_frames = [find_bright_pixels(original_image_for(frame_time)) for frame_time in full_frame_list]
 
+    loaded_mask = cv2.cvtColor(cv2.imread("just_damp_never_bright.edited.png"), cv2.COLOR_BGR2GRAY)
+    test_mask(lambda dt: (bright_pixel_frames[full_frame_list.index(dt)] * loaded_mask).sum())
+    dump_frames_scores_csv(full_frame_list, bright_pixel_frames, loaded_mask, "edited_mask")
+
     normalisedSumOfBrights = normalise(sum(bright_pixel_frames))
 
     # stepper = 10
@@ -124,10 +128,9 @@ async def do_tha_bizness():
     dump_normalised_image(just_damp_never_bright, f"just_damp_never_bright.png")
 
     dump_frames_scores_csv(full_frame_list, bright_pixel_frames, just_damp_never_bright,
-                           "just_damp_never_bright.scores")
+                           "just_damp_never_bright")
 
-    scorer = lambda dt:  (bright_pixel_frames[full_frame_list.index(dt)] * just_damp_never_bright).sum()
-    test_mask(scorer)
+    test_mask(lambda dt: (bright_pixel_frames[full_frame_list.index(dt)] * just_damp_never_bright).sum())
     # for frame_index in full_frame_list:
     #     identify_mask(frame_time)
 
@@ -144,7 +147,7 @@ def dump_frames_scores_csv(full_frame_list, bright_pixel_frames, mask, name: str
   scores_based_on_updated_mask = [(frame * mask).sum() for frame in bright_pixel_frames]
   normalised_scores = normalise(np.array(scores_based_on_updated_mask))
 
-  with open(f'{name}.csv', 'w', newline='') as csvfile:
+  with open(f'{name}.scores.csv', 'w', newline='') as csvfile:
     fieldnames = ['frame_time', 'score']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
