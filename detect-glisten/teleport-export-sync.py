@@ -32,6 +32,8 @@ known_dampness_scale_samples: list[datetime] = [datetime.fromisoformat(date_stri
   "2023-10-17T13:02:33Z",  # Scored high (0.078) in the past, but does not look damp to me?! Is it widespread mild damp?
   # "2023-10-19T17:01:24Z",  # A bit of damp, on the left
   "2023-10-19T14:13:32Z",  # Possibly wetter than 2023-10-19T17:01:24Z, definitely wetter than 2023-10-17T13:02:33Z
+  "2023-10-29T19:34:23Z",  # Local peak, probably wetter than 2023-10-19T14:13:32Z, but comparable
+  "2023-10-18T21:25:24Z",  # Wetter than 2023-10-19T14:13:32Z, less wet than 2023-10-16T20:35:33Z
   "2023-10-16T20:35:33Z",  # Pretty wet!
   "2023-10-19T19:07:34Z"  # Very wet - maybe the most wet!?
 ]]
@@ -107,7 +109,7 @@ async def do_tha_bizness():
     frame_indices = range(len(full_frame_list))
 
     constrained = keep_only_within_range(normalisedSumOfBrights, 0.2, 0.7)
-    constrained_threshold = 90000
+    constrained_threshold = 5000
     for index in frame_indices:
       score = ((bright_pixel_frames[index] * loaded_mask) > 0).sum()
       if (score > constrained_threshold):
