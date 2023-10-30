@@ -91,8 +91,10 @@ async def do_tha_bizness():
 
     bright_pixel_frames = [find_bright_pixels(original_image_for(frame_time)) for frame_time in full_frame_list]
 
-    loaded_mask = cv2.cvtColor(cv2.imread("just_damp_never_bright.edited.png"), cv2.COLOR_BGR2GRAY)
+    loaded_mask = normalise(cv2.cvtColor(cv2.imread("just_damp_never_bright.edited.png"), cv2.COLOR_BGR2GRAY))
     test_mask(lambda dt: (bright_pixel_frames[full_frame_list.index(dt)] * loaded_mask).sum())
+    explore_frame_scoring(datetime.fromisoformat("2023-10-17T13:02:33Z"), loaded_mask)
+
     dump_frames_scores_csv(full_frame_list, bright_pixel_frames, loaded_mask, "edited_mask")
 
     normalisedSumOfBrights = normalise(sum(bright_pixel_frames))
@@ -107,12 +109,12 @@ async def do_tha_bizness():
     constrained = keep_only_within_range(normalisedSumOfBrights, 0.2, 0.7)
     constrained_threshold = 90000
     for index in frame_indices:
-      score = ((bright_pixel_frames[index] * constrained) > 0).sum()
+      score = ((bright_pixel_frames[index] * loaded_mask) > 0).sum()
       if (score > constrained_threshold):
         print(f'{iso_format(full_frame_list[index])} : score={score}')
 
     damp_frame_indices = [frame_index for frame_index in frame_indices if
-                          ((bright_pixel_frames[frame_index] * constrained) > 0).sum() > constrained_threshold]
+                          ((bright_pixel_frames[frame_index] * loaded_mask) > 0).sum() > constrained_threshold]
     print(f'damp_frame_indices : {len(damp_frame_indices)}')
 
     dry_frame_indices = list(set(frame_indices) - set(damp_frame_indices))
@@ -133,6 +135,13 @@ async def do_tha_bizness():
     test_mask(lambda dt: (bright_pixel_frames[full_frame_list.index(dt)] * just_damp_never_bright).sum())
     # for frame_index in full_frame_list:
     #     identify_mask(frame_time)
+
+
+def explore_frame_scoring(frame_time: datetime, mask):
+  print(f"explore_frame_scoring : frame_time={frame_time}")
+  bright_pixel_frame = find_bright_pixels(original_image_for(frame_time))
+  hot_pixels = bright_pixel_frame * mask
+  dump_normalised_image(hot_pixels, f"hot_pixels.png")
 
 
 def test_mask(scorer: Callable[[datetime], float]):
