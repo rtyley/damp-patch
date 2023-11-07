@@ -206,7 +206,7 @@ def normalise(arr):
 def find_bright_pixels(image):
   gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
   # cv2.imshow('Grayscale', gray_image)
-  threshold = 224
+  threshold = 200
   ret, threshold_image = cv2.threshold(gray_image, threshold, 255, cv2.THRESH_TOZERO)
   return threshold_image
 
