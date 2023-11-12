@@ -65,7 +65,7 @@ def report_score_of_image(colour_image):
   print(raw_score)
 
   aio = Client(adafruit_io_username, adafruit_io_key)
-  feed = aio.feeds('beta-glisten')
+  feed = aio.feeds('glisten')
   aio.send_data(feed.key, raw_score)
 
 
