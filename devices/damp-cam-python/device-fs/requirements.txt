@@ -1,3 +1,5 @@
 RPi.GPIO
+opencv-python
+adafruit-io
 # picamera2
 
