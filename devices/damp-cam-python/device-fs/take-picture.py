@@ -40,7 +40,7 @@ def upload_image(filepath: str):
   with open(filePath, 'rb') as f:
     r = requests.post(
       f'https://www.teleport.io/api/v1/frame-set/fetebzuxkyjl?apikey={teleport_api_key}',
-      data=f)
+      data=f, verify=False)
     print(f'Upload complete! {r.status_code} - {"GOOD" if r.status_code == 200 else "Malfunction?"}')
 
 
